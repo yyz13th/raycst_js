@@ -23,13 +23,13 @@ const COLORS = {
 const FOV = toRadians(60);
 
 const map = [
-    [1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 1, 0, 1, 1],
-    [1, 0, 0, 0, 0, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 0, 0, 0, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+    [1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
 const player = {
@@ -43,11 +43,58 @@ function clearScreen(){
     c.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
-function movePlayer(){
-    player.x += Math.cos(player.angle)*player.speed;
-    player.y += Math.sin(player.angle)*player.speed;
+// function movePlayer(){
+//     player.x += Math.cos(player.angle)*player.speed;
+//     player.y += Math.sin(player.angle)*player.speed;
+//     }
 
-}
+function movePlayer() {
+    const nextX = player.x + Math.cos(player.angle) * player.speed;
+    const nextY = player.y + Math.sin(player.angle) * player.speed;
+  
+    if (!checkWallCollision(nextX, nextY)) {
+      // No collision, update player position
+      player.x = nextX;
+      player.y = nextY;
+    } else {
+      // Collision detected, restrict player from clipping through wall
+      const backX = player.x - Math.cos(player.angle) * player.speed;
+      const backY = player.y - Math.sin(player.angle) * player.speed;
+  
+      if (!checkWallCollision(backX, player.y)) {
+        // Move the player back along the x-axis
+        player.x = backX;
+      }
+  
+      if (!checkWallCollision(player.x, backY)) {
+        // Move the player back along the y-axis
+        player.y = backY;
+      }
+    }
+  }
+  
+
+function checkWallCollision(x, y) {
+    const cellX = Math.floor(x / CELL_SIZE);
+    const cellY = Math.floor(y / CELL_SIZE);
+  
+    // Check for collisions with vertical walls
+    const vWall = map[cellY][cellX];
+    if (vWall) {
+      return true; // Collision with vertical wall detected
+    }
+  
+    // Check for collisions with horizontal walls
+    const hWall = map[cellY][cellX];
+    if (hWall) {
+      return true; // Collision with horizontal wall detected
+    }
+  
+    // No collision detected
+    return false;
+  }
+
+
 
 function outOfMapBounds(x, y) {
     return x < 0 || x>= map[0].length || y < 0 || y >= map.length;
@@ -114,8 +161,9 @@ function getHCollision(angle){
     }
     return {angle, distance: distance(player.x, player.y, nextX, nextY), vertical: false}
 
-
 }
+
+
 
 //Calculates the collision point of a ray cast at a given angle
 
