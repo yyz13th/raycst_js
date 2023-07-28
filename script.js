@@ -16,6 +16,7 @@ const PLAYER_SIZE = 10;
 const COLORS = {
     rays: '#ffa600'
 }
+const FOV = toRadians(60);
 
 const map = [
     [1, 1, 1, 1, 1, 1, 1],
@@ -44,9 +45,62 @@ function movePlayer(){
 
 }
 
+function outOfMapBounds(x, y) {
+    return x < 0 || x>= map[0].length || y < 0 || y >= map.length;
+}
+
+function distance (x1, y1, x2, y2){
+    return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)); //pyphogorean formula
+}
+// Calculates the collision of a vertical ray with the walls
+
+function  getVCollision(angle){
+    const right = Math.abs(Math.floor((angle-Math.PI/2) /Math.PI) % 2)
+    const firstX = right ? Math.floor(player.x / CELL_SIZE) * CELL_SIZE + CELL_SIZE : Math.floor(player.x / CELL_SIZE) * CELL_SIZE;
+    const firstY = player.y + (firstX - player.x) * Math.tan(angle);
+
+    const xA = right ? CELL_SIZE : -CELL_SIZE;
+    const yA = xA * Math.tan(angle);
+
+    let wall;
+    let nextX = firstX;
+    let nextY = firstY;
+    while(!wall){
+        const cellX = right ? Math.floor(nextX / CELL_SIZE) : Math.floor(nextX / CELL_SIZE) -1;
+        const cellY = Math.floor(nextY / CELL_SIZE);
+
+    if(outOfMapBounds(cellX, cellY)){
+        break;
+    }
+    wall = map[cellY][cellX];
+    if(!wall){
+        nextX += xA;
+        nextY += yA;
+        }
+    }
+    return {angle, distance: distance(player.x, player.y, nextX, nextY), vertical: true}
+}
+
+//Calculates the collision point of a ray cast at a given angle
+
+function castRay(angle){
+    const vCollision = getVCollision(angle);
+    // const hCollision = getHCollision(angle);
+
+    return vCollision;
+        
+    return hCollision.distance >= vCollision.distance ? hCollision : vCollision;
+}
+
 function getRays(){
-    return [];
-    
+    const initialAngle = player.angle - FOV /2;
+    const numberOfRays = SCREEN_WIDTH;
+    const angleStep = FOV / numberOfRays;
+    return Array.from( {length: numberOfRays}, (_, i) => {
+        const angle = initialAngle + i * angleStep;
+        const ray = castRay(angle);
+        return ray;
+    })   
 }
 
 function renderScene(){
@@ -77,6 +131,7 @@ function renderMinimap(posX = 0, posY = 0, scale = 1, rays){
     })
 
         // player render 
+
     c.fillStyle = 'red' 
     c.fillRect(posX + player.x *scale - PLAYER_SIZE/2,
         posY + player.y *scale - PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
@@ -103,7 +158,7 @@ function gameloop(){
 }
 
 setInterval(gameloop, tick);
-
+    // Converts degrees to radians
 function toRadians (deg) {
     return deg * Math.PI / 180;
 }
