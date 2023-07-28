@@ -13,6 +13,9 @@ const tick = 30; //inits refresh rate
 const c = canvas.getContext('2d');
 const CELL_SIZE = 64;
 const PLAYER_SIZE = 10;
+const COLORS = {
+    rays: '#ffa600'
+}
 
 const map = [
     [1, 1, 1, 1, 1, 1, 1],
@@ -31,11 +34,13 @@ const player = {
     speed: 0
 }
 function clearScreen(){
-    c.fillStyle = 'blue';
+    c.fillStyle = 'grey';
     c.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 function movePlayer(){
+    player.x += Math.cos(player.angle)*player.speed;
+    player.y += Math.sin(player.angle)*player.speed;
 
 }
 
@@ -53,15 +58,39 @@ function renderMinimap(posX = 0, posY = 0, scale = 1, rays){
     map.forEach((row,y) => {
         row.forEach((cell, x) => {
             if(cell){
-            c.fillStyle = 'grey';
+            c.fillStyle = 'lime';
             c.fillRect(posX+x*cellSize, posY+y*cellSize, cellSize, cellSize);
             };
         })
     });
 
-    c.fillStyle = 'lime'
+    c.strokeStyle = COLORS.rays;  //must be rendered before player otherwise it will override
+    rays.forEach(ray => {
+        c.beginPath();
+        c.moveTo(player.x * scale+posX, player.y * scale+posY);
+        c.lineTo(
+            (player.x + Math.cos(ray.angle)*ray.distance)*scale,
+            (player.y + Math.sin(ray.angle)*ray.distance)*scale,
+        )
+        c.closePath();
+        c.stroke();
+    })
+
+        // player render 
+    c.fillStyle = 'red' 
     c.fillRect(posX + player.x *scale - PLAYER_SIZE/2,
         posY + player.y *scale - PLAYER_SIZE/2, PLAYER_SIZE, PLAYER_SIZE);
+
+    const rayLength = PLAYER_SIZE*2;
+    c.strokeStyle = 'blue';
+    c.beginPath();
+    c.moveTo(player.x * scale+posX, player.y * scale+posY);
+    c.lineTo(
+        (player.x + Math.cos(player.angle)*rayLength)*scale,
+        (player.y + Math.sin(player.angle)*rayLength)*scale,
+    )
+    c.closePath();
+    c.stroke();
 }
 
 
@@ -74,4 +103,29 @@ function gameloop(){
 }
 
 setInterval(gameloop, tick);
+
+function toRadians (deg) {
+    return deg * Math.PI / 180;
+}
+
+//controls 
+addEventListener('keydown', (e) => {
+    if(e.key === 'ArrowUp'){
+       player.speed = 2 
+    }
+
+    if(e.key === 'ArrowDown'){
+        player.speed = -2 
+     }
+    });
+
+addEventListener('keyup', (e) => {
+    if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+        player.speed = 0 
+        }
+    })   
+
+addEventListener('mousemove', (e) => {
+    player.angle += toRadians(e.movementX)
+    })
 });
