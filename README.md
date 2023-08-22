@@ -5,4 +5,4 @@ engine works only in x and y axes, hence its quite tricky to use textures overla
 movement: arrow keys <br>
 look: mouse <br><br>
 
-<i>future updates might appear in future</i>
+<i> updates might appear in future</i>
